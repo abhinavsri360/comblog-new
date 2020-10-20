@@ -65,7 +65,7 @@ const cloudinary = require('cloudinary')
 
 const fileUpload = require('express-fileupload')
 
-const expressSession = require('express-session') 
+const expressSession = require('express-session')
 
 const connectMongo = require('connect-mongo')
 
@@ -83,7 +83,7 @@ const getPostController = require('./controllers/getPost')
 
 const createHomecontroller = require('./controllers/homePage')
 
-const createPostController = require('./controllers/createPost') 
+const createPostController = require('./controllers/createPost')
 
 const createStoreController = require('./controllers/storePost')
 
@@ -98,7 +98,17 @@ const logoutController = require('./controllers/logout')
 
 const app = new express()
 
-mongoose.connect(process.env.DB_URL)
+mongoose.connect(process.env.DB_URL || 'mongodb://localhost:27017/comblog', {
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+	useFindAndModify: false
+})
+
+const db = mongoose.connection;
+
+db.on('errr', () => {
+	throw new Error('> UNABLE TO CONNECT TO THE DATABASE! CHECK CONNECTION');
+})
 
 cloudinary.config({
 	api_key: process.env.CLOUDINARY_API_KEY,
@@ -130,12 +140,12 @@ app.use(expressEdge)
 
 app.use(bodyParser.json())
 
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 
 
 app.set('views', `${__dirname}/views`)
 
-app.use('*', (req, res, next) =>{
+app.use('*', (req, res, next) => {
 	edge.global('auth', req.session.userId)
 
 	next()
@@ -145,7 +155,7 @@ app.use('*', (req, res, next) =>{
 
 //app.use('/posts/new', auth)
 
-app.get('/post/sample', (req, res) =>{
+app.get('/post/sample', (req, res) => {
 	res.render('sample')
 })
 
@@ -167,13 +177,13 @@ app.post('/users/login', redirectIfAuthenticated, loginUserController)
 
 app.get('/auth/logout', logoutController)
 
-app.use((req, res) =>{
+app.use((req, res) => {
 	res.render('not-found')
 })
 
 
-
-app.listen(process.env.PORT, () => {
-	console.log(`"App is listening to port ${process.env.PORT}"`)
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+	console.log(`"App is listening to port ${port}"`)
 })
 
